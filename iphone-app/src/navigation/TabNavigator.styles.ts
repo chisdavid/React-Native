@@ -10,5 +10,25 @@ export const styles = StyleSheet.create({
     },
     headerStyle: {
         backgroundColor: '#FFDFD5',
-    }
+    },
+    headerTitleStyle: {
+        fontWeight: '700',
+        fontSize: 20,
+        textAlign: 'center',
+    },
+    storyHeaderTitleStyle: {
+        fontWeight: '700',
+        fontSize: 18,
+        textAlign: 'center',
+    },
+    headerSideButton: {
+        width: 44,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    settingsButton: {
+        paddingLeft: 10,
+        position: 'relative',
+        right: 15,
+    },
 });

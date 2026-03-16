@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import PinkParticles from '../../components/PinkParticles';
+import type { RootTabParamList } from '../../navigation/TabNavigator';
 import { COUPONS, Coupon, CouponUsageMap, formatRemainingTime, getCouponRemainingMs, loadUsedCoupons } from '../../utils/loveCoupons';
 import { styles } from './HomeScreen.styles';
 
@@ -55,6 +57,7 @@ const getElapsedCounter = (fromDate: Date, toDate: Date): ElapsedCounter => {
 };
 
 const HomeScreen = () => {
+    const navigation = useNavigation<BottomTabNavigationProp<RootTabParamList>>();
     const [now, setNow] = useState(new Date());
     const [usedCoupons, setUsedCoupons] = useState<CouponUsageMap>({});
 
@@ -109,6 +112,10 @@ const HomeScreen = () => {
         }, undefined);
     }, [now, usedCoupons]);
 
+    const handleOpenVouchers = () => {
+        navigation.navigate('Surprise');
+    };
+
     return (
         <ScrollView
             style={styles.container}
@@ -127,9 +134,23 @@ const HomeScreen = () => {
                 </Text>
                 <Text style={styles.counterStartDate}>Din 18/03/2025</Text>
             </View>
+            <View style={{ top: -45, position: 'relative' }}>
+                <Text style={styles.title}>La multi ani noua, iubirea mea!</Text>
+                <Text style={styles.subtitle}>Un an in care mi-ai facut fiecare zi mai calda, mai frumoasa si mai plina de sens. Te iubesc mai mult cu fiecare clipa.</Text>
+            </View>
 
-            <Text style={styles.title}>La multi ani noua, iubirea mea!</Text>
-            <Text style={styles.subtitle}>Un an in care mi-ai facut fiecare zi mai calda, mai frumoasa si mai plina de sens. Te iubesc mai mult cu fiecare clipa.</Text>
+            <View style={styles.emotionalCtaCard}>
+                <Text style={styles.emotionalCtaEyebrow}>Pentru momentele in care ti se face dor</Text>
+                <Text style={styles.emotionalCtaText}>
+                    Ti-am lasat acolo o mica surpriza, doar pentru tine. Apasa si mergi direct la vouchers, ca sa gasesti ceva dragut de la mine.
+                </Text>
+                <Pressable
+                    onPress={handleOpenVouchers}
+                    style={({ pressed }) => [styles.emotionalCtaButton, pressed && styles.emotionalCtaButtonPressed]}
+                >
+                    <Text style={styles.emotionalCtaButtonText}>Apasa cand iti e dor de mine</Text>
+                </Pressable>
+            </View>
 
             <View style={styles.appPurposeCard}>
                 <Text style={styles.appPurposeTitle}>Despre aplicatie</Text>
