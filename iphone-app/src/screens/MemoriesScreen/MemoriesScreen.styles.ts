@@ -1,6 +1,19 @@
 import { StyleSheet } from 'react-native';
 
+const CAROUSEL_WIDTH = 339;
+
 export const styles = StyleSheet.create({
+    scrollablecontainer: {
+        flex: 1,
+        backgroundColor: '#FFF3F0',
+    },
+    contentContainer: {
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+        paddingTop: 56,
+        paddingBottom: 28,
+    },
     container: {
         flex: 1,
         justifyContent: 'flex-start',
@@ -26,6 +39,10 @@ export const styles = StyleSheet.create({
     carouselWrapper: {
         width: '100%',
         alignItems: 'center',
+    },
+    carouselList: {
+        width: CAROUSEL_WIDTH,
+        maxWidth: '100%',
     },
     carouselContent: {
         paddingHorizontal: 0,
