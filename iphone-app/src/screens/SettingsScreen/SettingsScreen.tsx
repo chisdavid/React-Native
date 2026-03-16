@@ -33,6 +33,15 @@ const parseSafeNumber = (input: string, fallback: number): number => {
     return parsed;
 };
 
+const showPlatformAlert = (title: string, message: string): void => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof window.alert === 'function') {
+        window.alert(`${title}\n\n${message}`);
+        return;
+    }
+
+    Alert.alert(title, message);
+};
+
 const SettingsScreen = () => {
     const [hourInput, setHourInput] = useState('07');
     const [minuteInput, setMinuteInput] = useState('00');
@@ -70,15 +79,12 @@ const SettingsScreen = () => {
         const parsedMinute = clamp(parseSafeNumber(minuteInput, 0), 0, 59);
 
         if (selectedDays.length === 0) {
-            Alert.alert('Selectie necesara', 'Alege cel putin o zi pentru notificari.');
+            showPlatformAlert('Selectie necesara', 'Alege cel putin o zi pentru notificari.');
             return;
         }
 
         try {
-            await saveNotificationTime({
-                hour: parsedHour,
-                minute: parsedMinute,
-            });
+            await saveNotificationTime({ hour: parsedHour, minute: parsedMinute, });
 
             await saveNotificationDays(selectedDays);
 
@@ -89,18 +95,19 @@ const SettingsScreen = () => {
                 try {
                     await scheduleDailyEncouragementNotifications();
                     setFeedbackText('Ora a fost salvata si notificarile au fost reprogramate.');
-                    Alert.alert('Setare salvata', 'Notificarile vor veni la noua ora setata.');
+                    showPlatformAlert('Setare salvata', `Notificarile vor veni la ora ${String(parsedHour).padStart(2, '0')}:${String(parsedMinute).padStart(2, '0')}.`);
                 } catch {
                     setFeedbackText('Ora a fost salvata. Reprogramarea notificarilor nu a reusit acum.');
-                    Alert.alert('Setare salvata', 'Ora a fost salvata, dar notificarile nu au putut fi reprogramate acum.');
+                    showPlatformAlert('Setare salvata', 'Ora a fost salvata, dar notificarile nu au putut fi reprogramate acum.');
                 }
             } else {
-                setFeedbackText('Setarea a fost salvata cu succes.');
-                Alert.alert('Setare salvata', 'Ora a fost salvata cu succes.');
+                await scheduleDailyEncouragementNotifications();
+                setFeedbackText('Setarea a fost salvata. Pe web, notificarile apar in browser cat timp pagina ramane deschisa si ai permis notificari pentru site.');
+                showPlatformAlert('Setare salvata', 'Setarea a fost salvata. Permite notificarile browserului pentru acest site.');
             }
         } catch {
             setFeedbackText('Nu am putut salva setarile. Incearca din nou.');
-            Alert.alert('Eroare', 'Nu am putut salva setarile. Incearca din nou.');
+            showPlatformAlert('Eroare', 'Nu am putut salva setarile. Incearca din nou.');
         }
     };
 
@@ -114,6 +121,9 @@ const SettingsScreen = () => {
             <View style={styles.card}>
                 <Text style={styles.title}>Setari notificari</Text>
                 <Text style={styles.subtitle}>Alege ora la care sa primesti mesajul zilnic de incurajare.</Text>
+                {Platform.OS === 'web' ? (
+                    <Text style={styles.helperText}>In varianta web, browserul poate afisa notificari doar daca permiti accesul si daca pagina ramane deschisa.</Text>
+                ) : null}
 
                 <View style={styles.row}>
                     <TextInput
