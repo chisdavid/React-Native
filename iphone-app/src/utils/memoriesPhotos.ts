@@ -80,13 +80,6 @@ export const memoriesPhotos: MemoryPhoto[] = [
         dateLabel: 'Martie 2026',
         source: require('../../assets/Memories/14.jpeg')
     },
-
-    // {
-    //     id: '16',
-    //     title: 'Ne mai si facem de ca uneori',
-    //     dateLabel: 'Martie 2026',
-    //     source: require('../../assets/Memories/14.jpeg')
-    // },
     {
         id: '17',
         title: 'Pentru ca suntem cea mai faina echipa',
