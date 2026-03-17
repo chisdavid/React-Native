@@ -40,6 +40,17 @@ const getRoadmapNodes = (photos: MemoryPhoto[], mapWidth: number): RoadmapNode[]
     let currentTop = 24;
     let photoIndex = 0;
 
+    if (photos.length > 0) {
+        // First node always at top-left
+        nodes.push({
+            id: photos[0].id,
+            left: minLeft,
+            top: currentTop,
+        });
+        photoIndex = 1;
+        currentTop += 74 + random() * 26; // Move to next row after first node
+    }
+
     while (photoIndex < photos.length) {
         const remainingPhotos = photos.length - photoIndex;
         const canCreatePair = remainingPhotos > 1;
