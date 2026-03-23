@@ -16,7 +16,7 @@ export const COUPONS: Coupon[] = [
         id: 'gug',
         title: 'Hug voucher',
         description: 'Voucher pentru o imbratisare lunga si calda, oricand ai nevoie de confort.',
-        countdown: 24 * 60 * 60 * 1000
+        countdown: 3 * 60 * 60 * 1000
     },
     {
         id: 'feleac-nature',
@@ -55,9 +55,9 @@ export const COUPONS: Coupon[] = [
         countdown: 7 * 24 * 60 * 60 * 1000
     },
     {
-        id: 'breakfast',
-        title: 'Mic dejun in pat',
-        description: 'Voucher pentru o dimineata linistita, cu rasfat si cafea buna.',
+        id: 'relaxing-massage',
+        title: 'Masaj de relaxare',
+        description: 'Voucher pentru un masaj facut cu grija, ca sa te relaxezi complet dupa o zi lunga.',
         countdown: 7 * 24 * 60 * 60 * 1000
     },
     {

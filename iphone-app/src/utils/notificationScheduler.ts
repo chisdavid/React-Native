@@ -4,7 +4,6 @@ import { Platform } from 'react-native';
 import { encouragementMessages } from './encouragementMessages';
 
 const DAILY_NOTIFICATION_TAG = 'daily-encouragement';
-const NOTIFICATIONS_TO_SCHEDULE = 30;
 const NOTIFICATION_TIME_STORAGE_KEY = 'daily-notification-time';
 const NOTIFICATION_DAYS_STORAGE_KEY = 'daily-notification-days';
 const WEB_LAST_NOTIFICATION_KEY = 'web-last-daily-encouragement';
@@ -54,18 +53,6 @@ const sanitizeNotificationDays = (days: NotificationDays): NotificationDays => {
         .sort((a, b) => a - b);
 
     return validDays.length > 0 ? validDays : DEFAULT_NOTIFICATION_DAYS;
-};
-
-const getFirstNotificationDate = (notificationTime: NotificationTime): Date => {
-    const now = new Date();
-    const firstDate = new Date();
-    firstDate.setHours(notificationTime.hour, notificationTime.minute, 0, 0);
-
-    if (firstDate <= now) {
-        firstDate.setDate(firstDate.getDate() + 1);
-    }
-
-    return firstDate;
 };
 
 export const getNotificationTime = async (): Promise<NotificationTime> => {
@@ -122,10 +109,21 @@ export const saveNotificationDays = async (days: NotificationDays): Promise<void
     await AsyncStorage.setItem(NOTIFICATION_DAYS_STORAGE_KEY, JSON.stringify(safeDays));
 };
 
-const addDays = (baseDate: Date, days: number): Date => {
-    const nextDate = new Date(baseDate);
-    nextDate.setDate(baseDate.getDate() + days);
-    return nextDate;
+export const supportsReliableBackgroundNotifications = (): boolean => {
+    return Platform.OS !== 'web';
+};
+
+const toExpoWeekday = (day: number): number => {
+    return day === 0 ? 1 : day + 1;
+};
+
+const createWeeklyTrigger = (day: number, notificationTime: NotificationTime) => {
+    return {
+        type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+        weekday: toExpoWeekday(day),
+        hour: notificationTime.hour,
+        minute: notificationTime.minute
+    } as const;
 };
 
 const getBrowserApis = () => {
@@ -252,15 +250,40 @@ const clearPreviouslyScheduledEncouragementNotifications = async (): Promise<voi
     );
 };
 
+const hasGrantedNativeNotificationPermissions = (permissions: Notifications.NotificationPermissionsStatus): boolean => {
+    if (Platform.OS === 'ios') {
+        const iosStatus = permissions.ios?.status;
+        return (
+            iosStatus === Notifications.IosAuthorizationStatus.AUTHORIZED ||
+            iosStatus === Notifications.IosAuthorizationStatus.PROVISIONAL ||
+            iosStatus === Notifications.IosAuthorizationStatus.EPHEMERAL
+        );
+    }
+
+    return permissions.status === 'granted';
+};
+
+const requestNativeNotificationPermissions = async (): Promise<boolean> => {
+    const permissions = await Notifications.requestPermissionsAsync({
+        ios: {
+            allowAlert: true,
+            allowBadge: false,
+            allowSound: true,
+        },
+    });
+
+    return hasGrantedNativeNotificationPermissions(permissions);
+};
+
 export const scheduleDailyEncouragementNotifications = async (): Promise<void> => {
     if (Platform.OS === 'web') {
         await scheduleWebEncouragementNotifications();
         return;
     }
 
-    const { status } = await Notifications.requestPermissionsAsync();
+    const hasPermission = await requestNativeNotificationPermissions();
 
-    if (status !== 'granted') {
+    if (!hasPermission) {
         return;
     }
 
@@ -269,31 +292,37 @@ export const scheduleDailyEncouragementNotifications = async (): Promise<void> =
 
     const notificationTime = await getNotificationTime();
     const notificationDays = await getNotificationDays();
-    const firstDate = getFirstNotificationDate(notificationTime);
-    let scheduledNotifications = 0;
-
-    for (let dayOffset = 0; scheduledNotifications < NOTIFICATIONS_TO_SCHEDULE; dayOffset += 1) {
-        const triggerDate = addDays(firstDate, dayOffset);
-
-        if (!notificationDays.includes(triggerDate.getDay())) {
-            continue;
-        }
-
+    for (const day of notificationDays) {
         await Notifications.scheduleNotificationAsync({
             content: {
-                title: 'Mesaj de incurajare',
+                title: 'Daily Message',
                 body: getRandomMessage(),
-                sound: 'default',
+                sound: true,
                 data: {
                     tag: DAILY_NOTIFICATION_TAG
                 }
             },
-            trigger: {
-                type: Notifications.SchedulableTriggerInputTypes.DATE,
-                date: triggerDate
-            }
+            trigger: createWeeklyTrigger(day, notificationTime)
         });
-
-        scheduledNotifications += 1;
     }
+};
+
+export const getNextEncouragementNotificationDate = async (): Promise<Date | null> => {
+    if (Platform.OS === 'web') {
+        return null;
+    }
+
+    const notificationTime = await getNotificationTime();
+    const notificationDays = await getNotificationDays();
+    const nextTriggerDates = await Promise.all(
+        notificationDays.map((day) => Notifications.getNextTriggerDateAsync(createWeeklyTrigger(day, notificationTime)))
+    );
+
+    const validTriggerDates = nextTriggerDates.filter((value): value is number => typeof value === 'number');
+
+    if (validTriggerDates.length === 0) {
+        return null;
+    }
+
+    return new Date(Math.min(...validTriggerDates));
 };

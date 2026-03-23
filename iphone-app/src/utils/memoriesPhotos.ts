@@ -58,7 +58,7 @@ export const memoriesPhotos: MemoryPhoto[] = [
     },
     {
         id: '9',
-        title: 'Iubirea pluteste in aer cand suntem impreuna11.',
+        title: 'Iubirea pluteste in aer cand suntem impreuna.',
         dateLabel: 'Februarie 2026',
         source: require('../../assets/Memories/9.jpeg')
     },

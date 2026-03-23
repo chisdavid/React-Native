@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Keyboard, Platform, ScrollView, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import {
+    getNextEncouragementNotificationDate,
     getNotificationDays,
     getNotificationTime,
     NotificationDays,
     scheduleDailyEncouragementNotifications,
     saveNotificationDays,
     saveNotificationTime,
+    supportsReliableBackgroundNotifications,
 } from '../../utils/notificationScheduler';
 import { styles } from './SettingsScreen.styles';
 
@@ -40,6 +42,16 @@ const showPlatformAlert = (title: string, message: string): void => {
     }
 
     Alert.alert(title, message);
+};
+
+const formatNextScheduledDate = (date: Date): string => {
+    return new Intl.DateTimeFormat('ro-RO', {
+        weekday: 'long',
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(date);
 };
 
 const SettingsScreen = () => {
@@ -94,16 +106,20 @@ const SettingsScreen = () => {
             if (Platform.OS !== 'web') {
                 try {
                     await scheduleDailyEncouragementNotifications();
-                    setFeedbackText('Ora a fost salvata si notificarile au fost reprogramate.');
-                    showPlatformAlert('Setare salvata', `Notificarile vor veni la ora ${String(parsedHour).padStart(2, '0')}:${String(parsedMinute).padStart(2, '0')}.`);
+                    const nextNotificationDate = await getNextEncouragementNotificationDate();
+                    const nextNotificationText = nextNotificationDate
+                        ? `Urmatoarea notificare este programata pentru ${formatNextScheduledDate(nextNotificationDate)}.`
+                        : `Notificarile vor veni la ora ${String(parsedHour).padStart(2, '0')}:${String(parsedMinute).padStart(2, '0')}.`;
+                    setFeedbackText(`Ora a fost salvata si notificarile au fost reprogramate. ${nextNotificationText}`);
+                    showPlatformAlert('Setare salvata', nextNotificationText);
                 } catch {
                     setFeedbackText('Ora a fost salvata. Reprogramarea notificarilor nu a reusit acum.');
                     showPlatformAlert('Setare salvata', 'Ora a fost salvata, dar notificarile nu au putut fi reprogramate acum.');
                 }
             } else {
                 await scheduleDailyEncouragementNotifications();
-                setFeedbackText('Setarea a fost salvata. Pe web, notificarile apar in browser cat timp pagina ramane deschisa si ai permis notificari pentru site.');
-                showPlatformAlert('Setare salvata', 'Setarea a fost salvata. Permite notificarile browserului pentru acest site.');
+                setFeedbackText('Setarea a fost salvata. In web pe iPhone, notificarea nu poate fi garantata zilnic in fundal. Poate aparea doar cat timp pagina este deschisa si browserul ramane activ.');
+                showPlatformAlert('Setare salvata', 'Setarea a fost salvata. In web pe iPhone, notificarea zilnica in fundal nu este suportata fiabil.');
             }
         } catch {
             setFeedbackText('Nu am putut salva setarile. Incearca din nou.');
@@ -121,8 +137,8 @@ const SettingsScreen = () => {
             <View style={styles.card}>
                 <Text style={styles.title}>Setari notificari</Text>
                 <Text style={styles.subtitle}>Alege ora la care sa primesti mesajul zilnic de incurajare.</Text>
-                {Platform.OS === 'web' ? (
-                    <Text style={styles.helperText}>In varianta web, browserul poate afisa notificari doar daca permiti accesul si daca pagina ramane deschisa.</Text>
+                {!supportsReliableBackgroundNotifications() ? (
+                    <Text style={styles.helperText}>Pe Cloudflare Pages sau alt deploy web deschis pe iPhone, Safari nu poate livra fiabil o notificare locala zilnica in fundal. Pentru reminder zilnic real, foloseste aplicatia in Expo Go sau un build nativ.</Text>
                 ) : null}
 
                 <View style={styles.row}>

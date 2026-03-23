@@ -36,6 +36,12 @@ Acest folder este static (HTML + JS) si poate fi urcat pe:
 4. Primesti un URL public.
 5. Deschizi URL-ul pe iPhone.
 
+Nota importanta:
+
+- Varianta web hostata pe Cloudflare Pages nu poate garanta notificari zilnice locale in fundal pe iPhone.
+- Cel mult poti afisa notificari de browser cat timp pagina ramane deschisa si browserul este activ.
+- Pentru o notificare reala o data pe zi la ora setata de utilizator, ai nevoie de aplicatia rulata nativ prin Expo Go sau un build iOS.
+
 ## 4) Important pentru aplicatii iOS "native" instalate direct
 
 Fara abonament Apple Developer (platit), varianta complet nativa instalata permanent pe telefon are limitari.

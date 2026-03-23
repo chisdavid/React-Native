@@ -191,10 +191,6 @@ const MemoriesTreasureMap = ({ photos, onSelectPhoto }: MemoriesTreasureMapProps
                         </View>
                     );
                 })}
-
-                <View style={styles.finishBadge}>
-                    <Text style={styles.finishBadgeText}>X</Text>
-                </View>
             </View>
 
             <Text style={styles.footerHint}>

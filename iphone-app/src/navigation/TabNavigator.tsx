@@ -1,7 +1,7 @@
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Pressable, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import HomeScreen from '../screens/HomeScreen/HomeScreen';
 import OurStoryScreen from '../screens/OurStoryScreen/OurStoryScreen';
 import MemoriesScreen from '../screens/MemoriesScreen/MemoriesScreen';
@@ -29,6 +29,25 @@ const TabNavigator = () => {
 
     const getHeaderPlaceholder = (): React.ReactNode => <View style={styles.headerSideButton} />;
 
+    const getHeaderTitleElement = (title: string, isCompact: boolean = false): React.ReactNode => (
+        <View style={styles.headerTitleContainer}>
+            <Text
+                style={isCompact ? styles.storyHeaderTitleStyle : styles.headerTitleStyle}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+            >
+                {title}
+            </Text>
+        </View>
+    );
+
+    const getTabLabelElement = (label: string): React.ReactNode => (
+        <Text style={styles.storyTabLabel} numberOfLines={2}>
+            {label}
+        </Text>
+    );
+
     const getTopBarIcon = (color: any, size: any, focused: boolean, route: any) => {
         let iconName: keyof typeof Ionicons.glyphMap = 'heart-outline';
 
@@ -51,7 +70,7 @@ const TabNavigator = () => {
                 headerStyle: styles.headerStyle,
                 headerTintColor: '#A3324A',
                 headerTitleAlign: 'center',
-                headerTitleStyle: styles.headerTitleStyle,
+                headerTitle: ({ children }) => getHeaderTitleElement(String(children)),
                 headerLeft: () => getHeaderPlaceholder(),
                 headerRight: () => getSettingsButtonElement(navigation),
                 tabBarActiveTintColor: '#B22C4A',
@@ -67,7 +86,8 @@ const TabNavigator = () => {
                 component={OurStoryScreen}
                 options={{
                     title: 'Povestea noastra',
-                    headerTitleStyle: styles.storyHeaderTitleStyle,
+                    headerTitle: () => getHeaderTitleElement('Povestea noastra', true),
+                    tabBarLabel: () => getTabLabelElement('Povestea noastra'),
                 }}
             />
             <Tab.Screen name="Memories" component={MemoriesScreen} options={{ title: 'Amintiri' }} />

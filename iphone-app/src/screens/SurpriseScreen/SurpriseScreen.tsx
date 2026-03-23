@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, View } from 'react-native';
 import LoveCoupons from '../../components/LoveCouponsComponent';
 import { styles } from './SurpriseScreen.styles';
+import SpotifyMusic from '../../components/SpotifyMusic';
 
 const SurpriseScreen = () => {
     return (
