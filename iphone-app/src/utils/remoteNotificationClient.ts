@@ -41,6 +41,16 @@ const getVapidPublicKey = (): string => {
     return process.env.EXPO_PUBLIC_NOTIFICATION_VAPID_PUBLIC_KEY?.trim() ?? '';
 };
 
+const getServiceWorkerScriptUrl = (): string => {
+    const serverUrl = getServerUrl();
+
+    if (!serverUrl) {
+        return '/notification-sw.js';
+    }
+
+    return `/notification-sw.js?serverUrl=${encodeURIComponent(serverUrl)}`;
+};
+
 export const isRemoteNotificationServerConfigured = (): boolean => {
     return getServerUrl().length > 0 && getVapidPublicKey().length > 0;
 };
@@ -180,7 +190,7 @@ const registerPushSubscription = async (requestPermission: boolean): Promise<Pus
         return null;
     }
 
-    const serviceWorkerRegistration = await navigator.serviceWorker.register('/notification-sw.js');
+    const serviceWorkerRegistration = await navigator.serviceWorker.register(getServiceWorkerScriptUrl());
     const activeRegistration = await navigator.serviceWorker.ready;
     const currentSubscription = await activeRegistration.pushManager.getSubscription();
 

@@ -152,11 +152,7 @@ const SettingsScreen = () => {
                     { requestPermission: true }
                 );
 
-                if (syncResult.synced) {
-                    const successMessage = 'Setarea a fost salvata si sincronizata cu serverul. Notificarile vor fi trimise de Cloudflare Worker chiar daca pagina este inchisa.';
-                    setFeedbackText(successMessage);
-                    showPlatformAlert('Setare salvata', successMessage);
-                } else {
+                if (!syncResult.synced) {
                     const failureMessage = getRemoteSyncMessage(syncResult);
                     setFeedbackText(failureMessage);
                     showPlatformAlert('Setare salvata', failureMessage);
