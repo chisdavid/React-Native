@@ -60,6 +60,15 @@ Variabile necesare in aplicatia web:
 - `EXPO_PUBLIC_NOTIFICATION_SERVER_URL`
 - `EXPO_PUBLIC_NOTIFICATION_VAPID_PUBLIC_KEY`
 
+Aceste variabile se configureaza in proiectul de frontend din Cloudflare Pages, la `Settings` -> `Variables and Secrets`.
+
+Exemplu:
+
+- `EXPO_PUBLIC_NOTIFICATION_SERVER_URL=https://server.<subdomain>.workers.dev`
+- `EXPO_PUBLIC_NOTIFICATION_VAPID_PUBLIC_KEY=<cheia-publica-vapid>`
+
+Dupa ce le adaugi, trebuie redeploy la frontend ca sa fie disponibile in build.
+
 Deploy backend:
 
 1. `cd ../server`
@@ -67,6 +76,23 @@ Deploy backend:
 3. configurezi `wrangler.jsonc`
 4. setezi secretele VAPID in Cloudflare
 5. `npx wrangler deploy`
+
+Deploy automat din Git pentru backend:
+
+1. conectezi Worker-ul la repository
+2. in `Build configuration` pui:
+	- `Build command`: `npm run check`
+	- `Deploy command`: `npx wrangler deploy`
+	- `Non-production branch deploy command`: `npx wrangler versions upload`
+	- `Path`: `server`
+3. faci commit si push pentru orice schimbare din folderul `server`
+4. Cloudflare face build si deploy automat
+
+Atentie:
+
+- `Path` trebuie sa fie `server`, nu `/server`
+- daca schimbi `wrangler.jsonc` doar local, Cloudflare nu vede modificarile pana nu faci push
+- domeniul Worker-ului ramane acelasi intre deploy-uri daca numele Worker-ului nu se schimba
 
 ## 5) Important pentru aplicatii iOS "native" instalate direct
 
