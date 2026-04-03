@@ -1,5 +1,5 @@
 
-export const DEFAULT_MESSAGES = [
+const DEFAULT_MESSAGES = [
     'Hello, iubirea mea! Sa ai o zi la fel de minunata ca tine.',
     'Esti minunata exact asa cum esti. Nu uita asta niciodata.',
     'Ai un suflet superb si o energie care lumineaza totul.',
