@@ -154,7 +154,7 @@ const SettingsScreen = () => {
 
                 if (syncResult.synced) {
                     alert('Setarea a fost salvata si sincronizata cu serverul pentru notificarile web.');
-                    showPlatformAlert('Setare salvata', 'Setarea a fost salvata');
+                    return;
                 }
 
                 if (!syncResult.synced) {
@@ -180,9 +180,7 @@ const SettingsScreen = () => {
             <View style={styles.card}>
                 <Text style={styles.title}>Setari notificari</Text>
                 <Text style={styles.subtitle}>Alege ora la care sa primesti mesajul zilnic de incurajare.</Text>
-                {Platform.OS === 'web' ? (
-                    <Text style={styles.helperText}>Notificarile web sunt trimise acum de serverul Cloudflare. Pe iPhone functioneaza doar daca site-ul este instalat pe Home Screen ca PWA si permiti notificarile.</Text>
-                ) : !supportsReliableBackgroundNotifications() ? (
+                {!supportsReliableBackgroundNotifications() ? (
                     <Text style={styles.helperText}>Notificarile locale in fundal nu sunt garantate pe aceasta platforma.</Text>
                 ) : null}
                 {Platform.OS === 'web' && !supportsWebPushNotifications() ? (
