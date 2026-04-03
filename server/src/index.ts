@@ -190,11 +190,29 @@ const getDeviceKey = (installationId: string): string => {
 };
 
 const base64UrlToBytes = (value: string): Uint8Array => {
+    if (typeof value !== 'string' || value.trim().length === 0) {
+        throw new Error('Missing base64url value.');
+    }
+
     const padding = '='.repeat((4 - (value.length % 4)) % 4);
     const base64 = `${value}${padding}`.replace(/-/g, '+').replace(/_/g, '/');
     const binary = atob(base64);
 
     return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+};
+
+const validateVapidEnv = (env: Env): void => {
+    if (!env.VAPID_PUBLIC_KEY?.trim()) {
+        throw new Error('VAPID_PUBLIC_KEY is missing from Worker runtime variables.');
+    }
+
+    if (!env.VAPID_PRIVATE_KEY?.trim()) {
+        throw new Error('VAPID_PRIVATE_KEY is missing from Worker runtime secrets.');
+    }
+
+    if (!env.VAPID_SUBJECT?.trim()) {
+        throw new Error('VAPID_SUBJECT is missing from Worker runtime variables.');
+    }
 };
 
 const createVapidPrivateJwk = (publicKey: string, privateKey: string) => {
@@ -261,6 +279,8 @@ const shouldSendNow = (record: DeviceRecord, now: Date): { shouldSend: boolean; 
 };
 
 const buildVapidToken = async (env: Env, audience: string): Promise<string> => {
+    validateVapidEnv(env);
+
     const privateKey = await importJWK(
         createVapidPrivateJwk(env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY),
         'ES256',
