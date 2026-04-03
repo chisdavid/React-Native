@@ -34,7 +34,7 @@ export type SyncResult = {
 };
 
 const getServerUrl = (): string => {
-    return process.env.EXPO_PUBLIC_NOTIFICATION_SERVER_URL?.trim() ?? '';
+    return process.env.EXPO_PUBLIC_NOTIFICATION_SERVER_URL?.trim().replace(/\/+$/, '') ?? '';
 };
 
 const getVapidPublicKey = (): string => {
@@ -203,7 +203,6 @@ const postSettingsToServer = async (payload: unknown): Promise<SyncResult> => {
     }
 
     try {
-        alert(`${serverUrl}/api/device/sync`)
         const response = await fetch(`${serverUrl}/api/device/sync`, {
             method: 'POST',
             headers: {
