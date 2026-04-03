@@ -17,6 +17,8 @@
     },
     "vars": {
         "VAPID_SUBJECT": "mailto:chisdavid12345@gmail.com",
-        "ALLOWED_ORIGINS": "*"
+        "ALLOWED_ORIGINS": "*",
+        "VAPID_PUBLIC_KEY": "BIXPDwaqwQ22gtrnQgd-6lUFg8uzsbljwEVKNBsmfSEYlDtkzJaVOG_rFAp-_3v5ha3cfTV6FGbFzniyPt0rOp4",
+        "VAPID_PRIVATE_KEY": "4L9QPLYjwauEh2jiKLLENuNPuiGLrkMaBaJGlXCXnQE"
     }
 }

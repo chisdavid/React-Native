@@ -152,15 +152,21 @@ const SettingsScreen = () => {
                     { requestPermission: true }
                 );
 
+                if (syncResult.synced) {
+                    alert('Setarea a fost salvata si sincronizata cu serverul pentru notificarile web.');
+                    showPlatformAlert('Setare salvata', 'Setarea a fost salvata');
+                }
+
                 if (!syncResult.synced) {
                     const failureMessage = getRemoteSyncMessage(syncResult);
                     setFeedbackText(failureMessage);
                     showPlatformAlert('Setare salvata', failureMessage);
                 }
             }
-        } catch {
-            setFeedbackText('Nu am putut salva setarile. Incearca din nou.');
-            showPlatformAlert('Eroare', 'Nu am putut salva setarile. Incearca din nou.');
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            setFeedbackText('Nu am putut salva setarile. Incearca din nou.' + error);
+            showPlatformAlert('Eroare', 'Nu am putut salva setarile. Incearca din nou.' + error);
         }
     };
 
