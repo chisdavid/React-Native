@@ -1,4 +1,4 @@
-import { importPKCS8, SignJWT } from 'jose';
+import { importJWK, SignJWT } from 'jose';
 
 type NotificationSchedule = {
     hour: number;
@@ -189,6 +189,33 @@ const getDeviceKey = (installationId: string): string => {
     return `${DEVICE_PREFIX}${installationId}`;
 };
 
+const base64UrlToBytes = (value: string): Uint8Array => {
+    const padding = '='.repeat((4 - (value.length % 4)) % 4);
+    const base64 = `${value}${padding}`.replace(/-/g, '+').replace(/_/g, '/');
+    const binary = atob(base64);
+
+    return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+};
+
+const createVapidPrivateJwk = (publicKey: string, privateKey: string) => {
+    const publicKeyBytes = base64UrlToBytes(publicKey);
+
+    if (publicKeyBytes.length !== 65 || publicKeyBytes[0] !== 4) {
+        throw new Error('VAPID_PUBLIC_KEY must be an uncompressed P-256 public key.');
+    }
+
+    const x = publicKeyBytes.slice(1, 33);
+    const y = publicKeyBytes.slice(33, 65);
+
+    return {
+        kty: 'EC',
+        crv: 'P-256',
+        d: privateKey,
+        x: btoa(String.fromCharCode(...x)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, ''),
+        y: btoa(String.fromCharCode(...y)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, ''),
+    } as const;
+};
+
 const getLocalDateParts = (date: Date, timeZone: string) => {
     const formatter = new Intl.DateTimeFormat('en-GB', {
         timeZone,
@@ -234,7 +261,10 @@ const shouldSendNow = (record: DeviceRecord, now: Date): { shouldSend: boolean; 
 };
 
 const buildVapidToken = async (env: Env, audience: string): Promise<string> => {
-    const privateKey = await importPKCS8(env.VAPID_PRIVATE_KEY, 'ES256');
+    const privateKey = await importJWK(
+        createVapidPrivateJwk(env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY),
+        'ES256',
+    );
 
     // VAPID_SUBJECT/audience pair is used by push services to verify the legitimacy of the token.  
     return new SignJWT({ sub: env.VAPID_SUBJECT })
