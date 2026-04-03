@@ -2,17 +2,14 @@ import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { encouragementMessages } from './encouragementMessages';
+import { supportsWebPushNotifications } from './remoteNotificationClient';
 
 const DAILY_NOTIFICATION_TAG = 'daily-encouragement';
 const NOTIFICATION_TIME_STORAGE_KEY = 'daily-notification-time';
 const NOTIFICATION_DAYS_STORAGE_KEY = 'daily-notification-days';
-const WEB_LAST_NOTIFICATION_KEY = 'web-last-daily-encouragement';
 const DEFAULT_NOTIFICATION_HOUR = 21;
 const DEFAULT_NOTIFICATION_MINUTE = 34;
 const DEFAULT_NOTIFICATION_DAYS: number[] = [1, 2, 3, 4, 5];
-const WEB_NOTIFICATION_CHECK_INTERVAL_MS = 30_000;
-
-let webNotificationInterval: ReturnType<typeof setInterval> | null = null;
 
 export type NotificationTime = {
     hour: number;
@@ -110,7 +107,7 @@ export const saveNotificationDays = async (days: NotificationDays): Promise<void
 };
 
 export const supportsReliableBackgroundNotifications = (): boolean => {
-    return Platform.OS !== 'web';
+    return Platform.OS !== 'web' || supportsWebPushNotifications();
 };
 
 const toExpoWeekday = (day: number): number => {
@@ -124,103 +121,6 @@ const createWeeklyTrigger = (day: number, notificationTime: NotificationTime) =>
         hour: notificationTime.hour,
         minute: notificationTime.minute
     } as const;
-};
-
-const getBrowserApis = () => {
-    if (typeof globalThis === 'undefined') {
-        return null;
-    }
-
-    return globalThis as typeof globalThis & {
-        Notification?: {
-            permission?: string;
-            requestPermission?: () => Promise<string>;
-            new(title: string, options?: { body?: string }): unknown;
-        };
-    };
-};
-
-const getWebNotificationInstanceKey = (date: Date): string => {
-    return [
-        date.getFullYear(),
-        String(date.getMonth() + 1).padStart(2, '0'),
-        String(date.getDate()).padStart(2, '0'),
-        String(date.getHours()).padStart(2, '0'),
-        String(date.getMinutes()).padStart(2, '0'),
-    ].join('-');
-};
-
-const requestWebNotificationPermission = async (): Promise<boolean> => {
-    const browserApis = getBrowserApis();
-
-    if (!browserApis?.Notification) {
-        return false;
-    }
-
-    if (browserApis.Notification.permission === 'granted') {
-        return true;
-    }
-
-    if (browserApis.Notification.permission === 'denied') {
-        return false;
-    }
-
-    const permission = await browserApis.Notification.requestPermission?.();
-    return permission === 'granted';
-};
-
-const clearWebNotificationScheduler = (): void => {
-    if (!webNotificationInterval) {
-        return;
-    }
-
-    clearInterval(webNotificationInterval);
-    webNotificationInterval = null;
-};
-
-const scheduleWebEncouragementNotifications = async (): Promise<void> => {
-    clearWebNotificationScheduler();
-
-    const hasPermission = await requestWebNotificationPermission();
-    if (!hasPermission) {
-        return;
-    }
-
-    const browserApis = getBrowserApis();
-    if (!browserApis?.Notification) {
-        return;
-    }
-
-    const checkAndNotify = async () => {
-        const now = new Date();
-        const notificationTime = await getNotificationTime();
-        const notificationDays = await getNotificationDays();
-
-        if (!notificationDays.includes(now.getDay())) {
-            return;
-        }
-
-        if (now.getHours() !== notificationTime.hour || now.getMinutes() !== notificationTime.minute) {
-            return;
-        }
-
-        const currentNotificationKey = getWebNotificationInstanceKey(now);
-        const lastNotificationKey = await AsyncStorage.getItem(WEB_LAST_NOTIFICATION_KEY);
-
-        if (lastNotificationKey === currentNotificationKey) {
-            return;
-        }
-
-        await AsyncStorage.setItem(WEB_LAST_NOTIFICATION_KEY, currentNotificationKey);
-        new browserApis.Notification('Mesaj de incurajare', {
-            body: getRandomMessage(),
-        });
-    };
-
-    await checkAndNotify();
-    webNotificationInterval = setInterval(() => {
-        void checkAndNotify();
-    }, WEB_NOTIFICATION_CHECK_INTERVAL_MS);
 };
 
 const configureNotificationChannel = async (): Promise<void> => {
@@ -277,7 +177,6 @@ const requestNativeNotificationPermissions = async (): Promise<boolean> => {
 
 export const scheduleDailyEncouragementNotifications = async (): Promise<void> => {
     if (Platform.OS === 'web') {
-        await scheduleWebEncouragementNotifications();
         return;
     }
 

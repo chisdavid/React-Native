@@ -38,11 +38,37 @@ Acest folder este static (HTML + JS) si poate fi urcat pe:
 
 Nota importanta:
 
-- Varianta web hostata pe Cloudflare Pages nu poate garanta notificari zilnice locale in fundal pe iPhone.
-- Cel mult poti afisa notificari de browser cat timp pagina ramane deschisa si browserul este activ.
-- Pentru o notificare reala o data pe zi la ora setata de utilizator, ai nevoie de aplicatia rulata nativ prin Expo Go sau un build iOS.
+- Notificarile locale din pagina nu ruleaza fiabil in fundal.
+- Pentru notificari cu aplicatia inchisa trebuie Web Push + service worker + backend mereu activ.
+- Pe iPhone, Web Push functioneaza doar pentru un site instalat pe Home Screen ca PWA si cu permisiunea de notificari acceptata.
 
-## 4) Important pentru aplicatii iOS "native" instalate direct
+## 4) Backend de notificari pe Cloudflare
+
+Exista acum un folder separat pentru backend:
+
+- `../server`
+
+Acest backend este un Cloudflare Worker care:
+
+- salveaza ora, minutul, zilele si timezone-ul alese din aplicatie
+- salveaza abonamentul Web Push al browserului
+- ruleaza un cron in fiecare minut
+- trimite notificarea chiar daca aplicatia web este inchisa
+
+Variabile necesare in aplicatia web:
+
+- `EXPO_PUBLIC_NOTIFICATION_SERVER_URL`
+- `EXPO_PUBLIC_NOTIFICATION_VAPID_PUBLIC_KEY`
+
+Deploy backend:
+
+1. `cd ../server`
+2. `npm install`
+3. configurezi `wrangler.jsonc`
+4. setezi secretele VAPID in Cloudflare
+5. `npx wrangler deploy`
+
+## 5) Important pentru aplicatii iOS "native" instalate direct
 
 Fara abonament Apple Developer (platit), varianta complet nativa instalata permanent pe telefon are limitari.
 

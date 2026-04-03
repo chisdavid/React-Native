@@ -1,0 +1,22 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "iphone-app-notification-server",
+    "main": "src/index.ts",
+    "compatibility_date": "2026-04-03",
+    "kv_namespaces": [
+        {
+            "binding": "NOTIFICATION_KV",
+            "id": "REPLACE_WITH_KV_NAMESPACE_ID",
+            "preview_id": "REPLACE_WITH_KV_PREVIEW_ID"
+        }
+    ],
+    "triggers": {
+        "crons": [
+            "* * * * *"
+        ]
+    },
+    "vars": {
+        "VAPID_SUBJECT": "mailto:you@example.com",
+        "ALLOWED_ORIGINS": "https://your-cloudflare-pages-domain.pages.dev"
+    }
+}

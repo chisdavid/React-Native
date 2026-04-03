@@ -10,6 +10,11 @@ import {
     saveNotificationTime,
     supportsReliableBackgroundNotifications,
 } from '../../utils/notificationScheduler';
+import {
+    isRemoteNotificationServerConfigured,
+    syncNotificationSettingsToServer,
+    supportsWebPushNotifications,
+} from '../../utils/remoteNotificationClient';
 import { styles } from './SettingsScreen.styles';
 
 const WEEKDAY_OPTIONS: Array<{ value: number; label: string }> = [
@@ -52,6 +57,21 @@ const formatNextScheduledDate = (date: Date): string => {
         hour: '2-digit',
         minute: '2-digit',
     }).format(date);
+};
+
+const getRemoteSyncMessage = (reason: string): string => {
+    switch (reason) {
+        case 'missing-server-url':
+            return 'Setarea a fost salvata local, dar lipseste EXPO_PUBLIC_NOTIFICATION_SERVER_URL.';
+        case 'missing-vapid-public-key':
+            return 'Setarea a fost salvata local, dar lipseste EXPO_PUBLIC_NOTIFICATION_VAPID_PUBLIC_KEY.';
+        case 'unsupported-browser':
+            return 'Browserul curent nu suporta Web Push. Pe iPhone foloseste Safari si instaleaza site-ul pe Home Screen.';
+        case 'permission-denied':
+            return 'Setarea a fost salvata, dar browserul nu are permisiune pentru notificari.';
+        default:
+            return 'Setarea a fost salvata local, dar sincronizarea cu serverul a esuat.';
+    }
 };
 
 const SettingsScreen = () => {
@@ -117,9 +137,21 @@ const SettingsScreen = () => {
                     showPlatformAlert('Setare salvata', 'Ora a fost salvata, dar notificarile nu au putut fi reprogramate acum.');
                 }
             } else {
-                await scheduleDailyEncouragementNotifications();
-                setFeedbackText('Setarea a fost salvata. In web pe iPhone, notificarea nu poate fi garantata zilnic in fundal. Poate aparea doar cat timp pagina este deschisa si browserul ramane activ.');
-                showPlatformAlert('Setare salvata', 'Setarea a fost salvata. In web pe iPhone, notificarea zilnica in fundal nu este suportata fiabil.');
+                const syncResult = await syncNotificationSettingsToServer(
+                    { hour: parsedHour, minute: parsedMinute },
+                    selectedDays,
+                    { requestPermission: true }
+                );
+
+                if (syncResult.synced) {
+                    const successMessage = 'Setarea a fost salvata si sincronizata cu serverul. Notificarile vor fi trimise de Cloudflare Worker chiar daca pagina este inchisa.';
+                    setFeedbackText(successMessage);
+                    showPlatformAlert('Setare salvata', successMessage);
+                } else {
+                    const failureMessage = getRemoteSyncMessage(syncResult.reason);
+                    setFeedbackText(failureMessage);
+                    showPlatformAlert('Setare salvata', failureMessage);
+                }
             }
         } catch {
             setFeedbackText('Nu am putut salva setarile. Incearca din nou.');
@@ -137,8 +169,16 @@ const SettingsScreen = () => {
             <View style={styles.card}>
                 <Text style={styles.title}>Setari notificari</Text>
                 <Text style={styles.subtitle}>Alege ora la care sa primesti mesajul zilnic de incurajare.</Text>
-                {!supportsReliableBackgroundNotifications() ? (
-                    <Text style={styles.helperText}>Pe Cloudflare Pages sau alt deploy web deschis pe iPhone, Safari nu poate livra fiabil o notificare locala zilnica in fundal. Pentru reminder zilnic real, foloseste aplicatia in Expo Go sau un build nativ.</Text>
+                {Platform.OS === 'web' ? (
+                    <Text style={styles.helperText}>Notificarile web sunt trimise acum de serverul Cloudflare. Pe iPhone functioneaza doar daca site-ul este instalat pe Home Screen ca PWA si permiti notificarile.</Text>
+                ) : !supportsReliableBackgroundNotifications() ? (
+                    <Text style={styles.helperText}>Notificarile locale in fundal nu sunt garantate pe aceasta platforma.</Text>
+                ) : null}
+                {Platform.OS === 'web' && !supportsWebPushNotifications() ? (
+                    <Text style={styles.helperText}>Browserul actual nu expune API-urile necesare pentru Web Push.</Text>
+                ) : null}
+                {Platform.OS === 'web' && !isRemoteNotificationServerConfigured() ? (
+                    <Text style={styles.helperText}>Lipsesc variabilele EXPO_PUBLIC_NOTIFICATION_SERVER_URL si/sau EXPO_PUBLIC_NOTIFICATION_VAPID_PUBLIC_KEY.</Text>
                 ) : null}
 
                 <View style={styles.row}>
