@@ -236,6 +236,7 @@ const shouldSendNow = (record: DeviceRecord, now: Date): { shouldSend: boolean; 
 const buildVapidToken = async (env: Env, audience: string): Promise<string> => {
     const privateKey = await importPKCS8(env.VAPID_PRIVATE_KEY, 'ES256');
 
+    // VAPID_SUBJECT/audience pair is used by push services to verify the legitimacy of the token.  
     return new SignJWT({ sub: env.VAPID_SUBJECT })
         .setProtectedHeader({ alg: 'ES256', typ: 'JWT' })
         .setAudience(audience)
