@@ -6,8 +6,8 @@
     "kv_namespaces": [
         {
             "binding": "NOTIFICATION_KV",
-            "id": "REPLACE_WITH_KV_NAMESPACE_ID",
-            "preview_id": "REPLACE_WITH_KV_PREVIEW_ID"
+            "id": "c52021a66dfb4714a2091e51ebd91737",
+            "preview_id": "f37a0cb9cd764f5fa35f1036e2b9f371"
         }
     ],
     "triggers": {
