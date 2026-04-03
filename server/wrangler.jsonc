@@ -17,6 +17,6 @@
     },
     "vars": {
         "VAPID_SUBJECT": "mailto:you@example.com",
-        "ALLOWED_ORIGINS": "https://react-native-5td.pages.dev"
+        "ALLOWED_ORIGINS": "*"
     }
 }
