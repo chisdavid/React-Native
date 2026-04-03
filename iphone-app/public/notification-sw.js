@@ -45,7 +45,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-    const title = 'Mesaj de incurajare';
+    const title = 'Mesaj';
     const body = getRandomMessage();
 
     event.waitUntil(
