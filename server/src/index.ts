@@ -36,6 +36,7 @@ type Env = {
     ALLOWED_ORIGINS?: string;
 };
 
+
 const DEVICE_PREFIX = 'device:';
 const DEFAULT_HOUR = 21;
 const DEFAULT_MINUTE = 34;
@@ -48,6 +49,7 @@ const DEFAULT_MESSAGES = [
     'Meriti liniste, iubire si o zi buna.',
     'Nu uita: esti importanta pentru mine.',
 ];
+
 const WEEKDAY_MAP: Record<string, number> = {
     Sun: 0,
     Mon: 1,
