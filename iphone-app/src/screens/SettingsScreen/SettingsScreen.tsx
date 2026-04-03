@@ -11,6 +11,7 @@ import {
     supportsReliableBackgroundNotifications,
 } from '../../utils/notificationScheduler';
 import {
+    SyncResult,
     isRemoteNotificationServerConfigured,
     syncNotificationSettingsToServer,
     supportsWebPushNotifications,
@@ -59,8 +60,8 @@ const formatNextScheduledDate = (date: Date): string => {
     }).format(date);
 };
 
-const getRemoteSyncMessage = (reason: string): string => {
-    switch (reason) {
+const getRemoteSyncMessage = (result: SyncResult): string => {
+    switch (result.reason) {
         case 'missing-server-url':
             return 'Setarea a fost salvata local, dar lipseste EXPO_PUBLIC_NOTIFICATION_SERVER_URL.';
         case 'missing-vapid-public-key':
@@ -70,6 +71,14 @@ const getRemoteSyncMessage = (reason: string): string => {
         case 'permission-denied':
             return 'Setarea a fost salvata, dar browserul nu are permisiune pentru notificari.';
         default:
+            if (result.status) {
+                return `Setarea a fost salvata local, dar sincronizarea cu serverul a esuat (${result.status}). ${result.details ?? ''}`.trim();
+            }
+
+            if (result.details) {
+                return `Setarea a fost salvata local, dar sincronizarea cu serverul a esuat. ${result.details}`;
+            }
+
             return 'Setarea a fost salvata local, dar sincronizarea cu serverul a esuat.';
     }
 };
@@ -148,7 +157,7 @@ const SettingsScreen = () => {
                     setFeedbackText(successMessage);
                     showPlatformAlert('Setare salvata', successMessage);
                 } else {
-                    const failureMessage = getRemoteSyncMessage(syncResult.reason);
+                    const failureMessage = getRemoteSyncMessage(syncResult);
                     setFeedbackText(failureMessage);
                     showPlatformAlert('Setare salvata', failureMessage);
                 }

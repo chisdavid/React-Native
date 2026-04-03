@@ -29,6 +29,8 @@ type SyncResultReason =
 export type SyncResult = {
     synced: boolean;
     reason: SyncResultReason;
+    status?: number;
+    details?: string;
 };
 
 const getServerUrl = (): string => {
@@ -201,6 +203,7 @@ const postSettingsToServer = async (payload: unknown): Promise<SyncResult> => {
     }
 
     try {
+        alert(`${serverUrl}/api/device/sync`)
         const response = await fetch(`${serverUrl}/api/device/sync`, {
             method: 'POST',
             headers: {
@@ -210,12 +213,22 @@ const postSettingsToServer = async (payload: unknown): Promise<SyncResult> => {
         });
 
         if (!response.ok) {
-            return { synced: false, reason: 'sync-failed' };
+            const responseText = await response.text();
+            return {
+                synced: false,
+                reason: 'sync-failed',
+                status: response.status,
+                details: responseText || 'Serverul a raspuns cu eroare fara body.',
+            };
         }
 
         return { synced: true, reason: 'success' };
-    } catch {
-        return { synced: false, reason: 'sync-failed' };
+    } catch (error) {
+        return {
+            synced: false,
+            reason: 'sync-failed',
+            details: error instanceof Error ? error.message : 'Network request failed.',
+        };
     }
 };
 
