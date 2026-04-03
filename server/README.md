@@ -124,6 +124,7 @@ URL-ul `workers.dev` ramane stabil intre deploy-uri, cat timp numele Worker-ului
 - `GET /health`
 - `GET /api/public/message`
 - `POST /api/device/sync`
+- `POST /api/device/test`
 
 Body pentru `POST /api/device/sync`:
 
@@ -149,3 +150,16 @@ Body pentru `POST /api/device/sync`:
   "pushEnabled": true
 }
 ```
+
+Body optional pentru `POST /api/device/test`:
+
+```json
+{
+  "installationId": "uuid-local"
+}
+```
+
+Comportament:
+
+- daca trimiti `installationId`, Worker-ul incearca sa trimita imediat o notificare catre device-ul respectiv
+- daca nu trimiti `installationId`, Worker-ul alege ultimul device activ sincronizat si incearca sa trimita imediat notificarea

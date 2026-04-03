@@ -325,6 +325,36 @@ const processScheduledNotifications = async (env: Env): Promise<void> => {
     } while (cursor);
 };
 
+const findDeviceRecord = async (env: Env, installationId?: string): Promise<DeviceRecord | null> => {
+    if (installationId) {
+        const rawRecord = await env.NOTIFICATION_KV.get(getDeviceKey(installationId), 'json');
+        return rawRecord as DeviceRecord | null;
+    }
+
+    let cursor: string | undefined;
+    let newestRecord: DeviceRecord | null = null;
+
+    do {
+        const listResult = await env.NOTIFICATION_KV.list({ prefix: DEVICE_PREFIX, cursor });
+        cursor = listResult.list_complete ? undefined : listResult.cursor;
+
+        for (const key of listResult.keys) {
+            const rawRecord = await env.NOTIFICATION_KV.get(key.name, 'json');
+            const record = rawRecord as DeviceRecord | null;
+
+            if (!record?.pushEnabled || !record.subscription) {
+                continue;
+            }
+
+            if (!newestRecord || record.updatedAt > newestRecord.updatedAt) {
+                newestRecord = record;
+            }
+        }
+    } while (cursor);
+
+    return newestRecord;
+};
+
 const handleSyncDevice = async (request: Request, env: Env): Promise<Response> => {
     const body = await request.json() as {
         installationId?: string;
@@ -369,6 +399,50 @@ const handleSyncDevice = async (request: Request, env: Env): Promise<Response> =
     });
 };
 
+const handleTestPush = async (request: Request, env: Env): Promise<Response> => {
+    const body = await request.json().catch(() => ({})) as {
+        installationId?: string;
+    };
+    const installationId = sanitizeInstallationId(body.installationId);
+    const record = await findDeviceRecord(env, installationId ?? undefined);
+
+    if (!record) {
+        return jsonResponse(request, env, {
+            error: installationId
+                ? 'No device record found for this installationId.'
+                : 'No active push subscription found for testing.',
+        }, 404);
+    }
+
+    try {
+        const response = await sendPushNotification(record, env);
+
+        if (response.ok) {
+            return jsonResponse(request, env, {
+                ok: true,
+                installationId: record.installationId,
+                status: response.status,
+                message: 'Test push notification sent.',
+            });
+        }
+
+        const responseText = await response.text();
+
+        return jsonResponse(request, env, {
+            ok: false,
+            installationId: record.installationId,
+            status: response.status,
+            error: responseText || 'Push service returned an error.',
+        }, 502);
+    } catch (error) {
+        return jsonResponse(request, env, {
+            ok: false,
+            installationId: record.installationId,
+            error: error instanceof Error ? error.message : 'Unknown push error.',
+        }, 500);
+    }
+};
+
 const handleRequest = async (request: Request, env: Env): Promise<Response> => {
     const url = new URL(request.url);
 
@@ -396,6 +470,10 @@ const handleRequest = async (request: Request, env: Env): Promise<Response> => {
 
     if (request.method === 'POST' && url.pathname === '/api/device/sync') {
         return handleSyncDevice(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/device/test') {
+        return handleTestPush(request, env);
     }
 
     return jsonResponse(request, env, { error: 'Not found.' }, 404);

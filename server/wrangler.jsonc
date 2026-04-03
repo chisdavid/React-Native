@@ -16,7 +16,7 @@
         ]
     },
     "vars": {
-        "VAPID_SUBJECT": "mailto:you@example.com",
+        "VAPID_SUBJECT": "mailto:chisdavid12345@gmail.com",
         "ALLOWED_ORIGINS": "*"
     }
 }
