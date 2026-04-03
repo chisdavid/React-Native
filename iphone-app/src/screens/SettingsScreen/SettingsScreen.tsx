@@ -164,6 +164,7 @@ const SettingsScreen = () => {
                 }
             }
         } catch (error) {
+
             console.error('Error saving settings:', error);
             setFeedbackText('Nu am putut salva setarile. Incearca din nou.' + error);
             showPlatformAlert('Eroare', 'Nu am putut salva setarile. Incearca din nou.' + error);
